@@ -41,23 +41,35 @@ class UserProfile (models. Model):
     void_reason = models.CharField (max_length=1024)
     uuid = models.UUIDField (default=uuid4, editable=False, unique=True)
     
-def _str__(self):
-    return f"{self.username} {self.first_name} {self.last_name}"
-
-def delete(self,*args, **kwargs):
-    self.voided = True
-    self.date_voided =timezone.now
-    if (not self.void_reason):
-        self.void_reason= 'Voided without providing a reason'
-    self.save()
-    
-def undelete(self,*args, **kwargs):
-    if self.voided:
-        self.date_voided = False
-        self.date_voided =None
-        self.void_reason= None
+    def _str__(self):
+        
+        return f"{self.username} {self.first_name} {self.last_name}"
+    def update(self, updated_by=None, *args, **kwargs):
+        self.date_updated = timezone.now()
+        if (not updated_by):
+            updated_by = User.objects.get(pk=1)
+        self.updated_by = updated_by
         self.save()
-
+    def delete(self, voided_by=None, *args, **kwargs):
+        self.voided = True
+        self.date_voided = timezone.now()
+        if (not self.void_reason):
+            self.void_reason = 'Voided without providing a reason'
+        if (not voided_by):
+            voided_by = User.objects.get(pk=1)
+        self.voided_by = voided_by
+        self.save()
+    
+    def undelete(self, *args, **kwargs):
+        if self.voided:
+            self.voided = False
+            self.date_voided = None
+            self.void_reason = None
+            self.voided_by = None
+            self.save()
+    def purge(self, *args, **kwargs):
+        self.delete()
+            
 
 
 class VehicleModel (models. Model):
@@ -84,7 +96,7 @@ help_text="Select the vehicle chassis type")
     uuid = models.UUIDField (default=uuid4, editable=False, unique=True)
 class Meta:
     db_table="baham_vehicle_model"
-    
+    #  "void" and "unvoid" functions 
     def void(self, *args):
         self.voided =True
         voided_by =models. ForeignKey (User, on_delete=models.CASCADE)
@@ -94,7 +106,37 @@ class Meta:
         self.voided =True
         voided_by =models. ForeignKey (User, on_delete=models.CASCADE)
         void_reason = models.CharField (max_length=1024)
-        self.save()        
+        self.save()  
+        
+    def update(self, updated_by=None, *args, **kwargs):
+        self.date_updated = timezone.now()
+        if (not updated_by):
+            updated_by = User.objects.get(pk=1)
+        self.updated_by = updated_by
+        self.save()
+    def delete(self, voided_by=None, *args, **kwargs):
+        self.voided = True
+        self.date_voided = timezone.now()
+        if (not self.void_reason):
+            self.void_reason = 'Voided without providing a reason'
+        if (not voided_by):
+            voided_by = User.objects.get(pk=1)
+        self.voided_by = voided_by
+        self.save()
+    
+    def undelete(self, *args, **kwargs):
+        if self.voided:
+            self.voided = False
+            self.date_voided = None
+            self.void_reason = None
+            self.voided_by = None
+            self.save()    
+    def purge(self, *args, **kwargs):
+        self.delete()
+
+
+      
+      
     
     class Vehicle (models.Model):
         vehicle_id = models.AutoField (primary_key=True, db_column='id')
@@ -117,8 +159,34 @@ class Meta:
     voided_by = models. ForeignKey (User, on_delete=models.CASCADE, related_name='Vehicle_voider')
     void_reason = models.CharField (max_length=1024)
     uuid = models.UUIDField (default=uuid4, editable=False, unique=True)
-def _str_(self):
-    return f"{self.model.vendor} {self.model.model} {self.colour}"
+    def _str_(self):
+        return f"{self.model.vendor} {self.model.model} {self.colour}"
+    def update(self, updated_by=None, *args, **kwargs):
+        self.date_updated = timezone.now()
+        if (not updated_by):
+            updated_by = User.objects.get(pk=1)
+        self.updated_by = updated_by
+        self.save()
+    def delete(self, voided_by=None, *args, **kwargs):
+        self.voided = True
+        self.date_voided = timezone.now()
+        if (not self.void_reason):
+            self.void_reason = 'Voided without providing a reason'
+        if (not voided_by):
+            voided_by = User.objects.get(pk=1)
+        self.voided_by = voided_by
+        self.save()
+    
+    def undelete(self, *args, **kwargs):
+        if self.voided:
+            self.voided = False
+            self.date_voided = None
+            self.void_reason = None
+            self.voided_by = None
+            self.save()    
+    def purge(self, *args, **kwargs):
+        self.delete()
+
 
 
 class Owner (User):
@@ -148,3 +216,32 @@ class Contract (models.Model):
     voided_by = models. ForeignKey (User, on_delete=models.CASCADE, related_name='contract_voider')
     void_reason = models.CharField (max_length=1024)
     uuid = models.UUIDField (default=uuid4, editable=False, unique=True)
+    def __str__(self):
+        return f"{self}"
+    def update(self, updated_by=None, *args, **kwargs):
+        self.date_updated = timezone.now()
+        if (not updated_by):
+            updated_by = User.objects.get(pk=1)
+        self.updated_by = updated_by
+        self.save()
+    
+    def delete(self, voided_by=None, *args, **kwargs):
+        self.voided = True
+        self.date_voided = timezone.now()
+        if (not self.void_reason):
+            self.void_reason = 'Voided without providing a reason'
+        if (not voided_by):
+            voided_by = User.objects.get(pk=1)
+        self.voided_by = voided_by
+        self.save()
+    
+    def undelete(self, *args, **kwargs):
+        if self.voided:
+            self.voided = False
+            self.date_voided = None
+            self.void_reason = None
+            self.voided_by = None
+            self.save()
+    
+    def purge(self, *args, **kwargs):
+        self.delete()
