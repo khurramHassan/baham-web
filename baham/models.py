@@ -2,7 +2,10 @@ from django.utils.timezone import now
 from django.contrib.auth.models import User
 from django.db import models
 from datetime import timezone
+from django.db.models import Q
 from uuid import uuid4
+import re
+
 
 from baham.constants import COLOURS, TOWNS
 from baham.enum_types import VehicleType, Vehiclestatus, UserType
@@ -161,6 +164,18 @@ class Meta:
     uuid = models.UUIDField (default=uuid4, editable=False, unique=True)
     def _str_(self):
         return f"{self.model.vendor} {self.model.model} {self.colour}"
+    
+    def save(self, created_by=None, *args, **kwargs):
+        # No more than one active vehicles per owner
+        owned vehicles = Vehicle.objects.filter (owner=self.owner).exclude(status=VehicleStatus. REMOVED)
+        if owned vehicles:
+            raise Exception ("Another vehicle is already registred for this owner.")
+        self.date_created = timezone.now()
+        if not created_by:
+            created_by = User.objects.get(pk=1)
+        self.created_by = created_by
+        super().save()
+        
     def update(self, updated_by=None, *args, **kwargs):
         self.date_updated = timezone.now()
         if (not updated_by):
